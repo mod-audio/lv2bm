@@ -26,12 +26,14 @@
 
 #include "urid_map.h"
 #include "worker.h"
+#include "lv2_evbuf.h"
 
 #define MINIMUM_PRESET_LABEL "minimum"
 #define MAXIMUM_PRESET_LABEL "maximum"
 #define DEFAULT_PRESET_LABEL "default"
 
-#define FEATURES_COUNT  5
+#define FEATURES_COUNT      5
+#define EVENT_BUFFER_SIZE   4096
 
 class Plugin;
 class PortGroup;
@@ -55,6 +57,7 @@ struct port_data_t
     scale_point_t scale_points;
 
     float *buffer;
+    LV2_Evbuf *event_buffer;
 
     bool is_integer, is_logarithmic, is_enumeration, is_scale_point, is_toggled, is_trigger;
 
@@ -93,7 +96,7 @@ class Plugin : public Workee
 public:
     Plugin(std::string uri, uint32_t sample_rate, uint32_t sample_count);
     ~Plugin();
-    
+
     void run(uint32_t sample_count);
 
     std::string uri;
@@ -103,15 +106,15 @@ public:
     Lilv::Instance* instance;
 
     // ports
-    PortGroup *audio, *control;
+    PortGroup *audio, *control, *atom;
     param_range_t ranges;
     uint32_t num_ports;
-    
+
     LV2_Feature** features;
 
     // urid
-    static URIDMap urid_map;    
-    struct URIDs    
+    static URIDMap urid_map;
+    struct URIDs
     {
         LV2_URID atom_Int;
         LV2_URID atom_Float;

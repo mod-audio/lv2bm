@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
             case 'h':
                 cout << "Usage: " << argv[0] << " [OPTIONS] URIs" << endl;
                 cout << "-r, --rate            Defines the sample rate. Default: " << rate << endl << endl;
-                cout << "-f, --frame-size      Defines the frame size. Equivalent to option -p on JACK." << endl; 
+                cout << "-f, --frame-size      Defines the frame size. Equivalent to option -p of the JACK." << endl;
                 cout << "                      Default: " << frame_size << endl << endl;
                 cout << "-n, --n-frames        Defines the number of frames. How many times the run " << endl;
                 cout << "                      function of the plugin will execute. Default: " << n_frames << endl << endl;
@@ -72,8 +72,9 @@ int main(int argc, char *argv[])
 }
 
 // FIXME: memory issues: valgrind --leak-check=full --show-reachable=yes --log-file=/tmp/valgrind.log ./lv2bm
+// TODO: do something, even a print, when run lv2bm without options
 // TODO: print version
 // TODO: generate MIDI input for plugins that need it
-// TODO: choose differents audio inputs as did by http://carlh.net/plugins/torture.php
-// TODO: allows to select the output unit
+// TODO: choose differents audio inputs as in http://carlh.net/plugins/torture.php
+// TODO: allow to select the output unit
 // TODO(?): create option to print the controls values for max, min, def, best, worst

@@ -11,6 +11,11 @@ static Lilv::Node g_control = g_world->new_uri(LV2_CORE__ControlPort);
 static Lilv::Node g_input   = g_world->new_uri(LV2_CORE__InputPort);
 static Lilv::Node g_output  = g_world->new_uri(LV2_CORE__OutputPort);
 
+static Lilv::Node g_atom        = g_world->new_uri(LV2_ATOM__AtomPort);
+static Lilv::Node g_atom_chunk  = g_world->new_uri(LV2_ATOM__Chunk);
+static Lilv::Node g_atom_seq    = g_world->new_uri(LV2_ATOM__Sequence);
+static Lilv::Node g_event       = g_world->new_uri(LV2_EVENT__EventPort);
+
 static Lilv::Node g_integer     = g_world->new_uri(LV2_CORE__integer);
 static Lilv::Node g_enumeration = g_world->new_uri(LV2_CORE__enumeration);
 static Lilv::Node g_scale_point = g_world->new_uri(LV2_CORE__scalePoint);
@@ -52,7 +57,7 @@ work_schedule(LV2_Worker_Schedule_Handle handle,
               const void*                data)
 {
     Plugin* plugin = (Plugin*)handle;
-    
+
     // Enqueue message for the worker thread
     return plugin->worker->schedule(size, data) ?
         LV2_WORKER_SUCCESS : LV2_WORKER_ERR_UNKNOWN;
@@ -79,16 +84,16 @@ PortGroup::PortGroup(Plugin* p, Lilv::Node type, uint32_t sample_count)
     for (uint32_t i = 0; i < p->num_ports; i++)
     {
         Lilv::Port port = p->plugin->get_port_by_index(i);
-        
-        // check the port type: control or audio
-        if (port.is_a(type))
+
+        // check the port type
+        if (port.is_a(type) || (port.is_a(g_event) && type == g_atom))
         {
             port_data_t *port_data = 0;
 
             if (port.is_a(g_input))
             {
                 port_data = &inputs_by_index[i_input++];
-            }                
+            }
             else if (port.is_a(g_output))
             {
                 port_data = &outputs_by_index[i_output++];
@@ -99,7 +104,7 @@ PortGroup::PortGroup(Plugin* p, Lilv::Node type, uint32_t sample_count)
             port_data->max = p->ranges.max[i];
             port_data->def = p->ranges.def[i];
             port_data->value = port_data->def;
-            
+
             // name and symbol
             Lilv::Node symbol = port.get_symbol();
             Lilv::Node name = port.get_name();
@@ -137,13 +142,13 @@ PortGroup::PortGroup(Plugin* p, Lilv::Node type, uint32_t sample_count)
             // data buffer
             if (sample_count > 1)
             {
-                port_data->buffer = new float[sample_count];                
+                port_data->buffer = new float[sample_count];
             }
-            else 
+            else
             {
                 port_data->buffer = &(port_data->value);
             }
-            
+
             // connect the variable with plugin port
             p->instance->connect_port(i, port_data->buffer);
 
@@ -155,6 +160,19 @@ PortGroup::PortGroup(Plugin* p, Lilv::Node type, uint32_t sample_count)
             else if (port.is_a(g_output))
             {
                 outputs_by_symbol[port_data->symbol] = port_data;
+            }
+
+            // check if is atom or event
+            port_data->event_buffer = NULL;
+            if (port.is_a(g_atom) || port.is_a(g_event))
+            {
+                port_data->event_buffer =
+                    lv2_evbuf_new(EVENT_BUFFER_SIZE,
+                                  port.is_a(g_atom) ? LV2_EVBUF_ATOM : LV2_EVBUF_EVENT,
+                                  Plugin::urid_map.map[g_atom_chunk.as_string()],
+                                  Plugin::urid_map.map[g_atom_seq.as_string()]);
+
+                p->instance->connect_port(i, lv2_evbuf_get_buffer(port_data->event_buffer));
             }
         }
     }
@@ -206,7 +224,7 @@ Plugin::Plugin(std::string uri, uint32_t sample_rate, uint32_t sample_count)
 {
     if (!g_initialized)
     {
-        g_world->load_all();        
+        g_world->load_all();
         g_initialized = true;
     }
 
@@ -258,7 +276,7 @@ Plugin::Plugin(std::string uri, uint32_t sample_rate, uint32_t sample_count)
 
     if (plugin->has_feature(g_worker_sched))
     {
-        LV2_Worker_Schedule* schedule = 
+        LV2_Worker_Schedule* schedule =
             (LV2_Worker_Schedule*) malloc(sizeof(LV2_Worker_Schedule));
 
         worker                      = new Worker(this, 4096);
@@ -282,6 +300,7 @@ Plugin::Plugin(std::string uri, uint32_t sample_rate, uint32_t sample_count)
     // create the ports
     audio = new PortGroup(this, g_audio, sample_count);
     control = new PortGroup(this, g_control);
+    atom = new PortGroup(this, g_atom);
 
     instance->activate();
 }
@@ -295,17 +314,36 @@ Plugin::~Plugin()
     if (worker) delete worker;
     if (audio) delete audio;
     if (control) delete control;
+    if (atom) delete atom;
 }
 
 void Plugin::run(uint32_t sample_count)
 {
+    // event input ports
+    for (uint32_t i = 0; i < atom->inputs_by_index.size(); i++)
+    {
+        lv2_evbuf_reset(atom->inputs_by_index[i].event_buffer, true);
+
+        // TODO: write input MIDI events to test
+    }
+
+    // reset event output ports
+    for (uint32_t i = 0; i < atom->outputs_by_index.size(); i++)
+    {
+        lv2_evbuf_reset(atom->outputs_by_index[i].event_buffer, false);
+    }
+
+    // process the plugin
     instance->run(sample_count);
 
+    // notify the plugin the run cycle is finished
     if (work_iface)
     {
         worker->emit_responses();
         if (work_iface->end_run) work_iface->end_run(instance->get_handle());
     }
+
+    // TODO: write output MIDI events to test
 }
 
 int Plugin::work(uint32_t size, const void* data)
