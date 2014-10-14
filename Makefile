@@ -29,10 +29,10 @@ ifeq ($(DEBUG), 1)
 endif
 
 # library links
-LIBS = -ljack `pkg-config --libs lilv-0` -lpthread `pkg-config --libs glibmm-2.4` `pkg-config --libs glib-2.0`
+LIBS = -lpthread `pkg-config --libs lilv-0` `pkg-config --libs glib-2.0`
 
 # additional include paths
-INCS = `pkg-config --cflags lilv-0` `pkg-config --cflags glibmm-2.4` `pkg-config --cflags glib-2.0`
+INCS = `pkg-config --cflags lilv-0` `pkg-config --cflags glib-2.0`
 
 # remove command
 RM = rm -f

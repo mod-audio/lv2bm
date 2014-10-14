@@ -20,7 +20,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-  #include <iostream>
+#include <iostream>
 
 #include "worker.h"
 
@@ -31,14 +31,19 @@ Worker::Worker(Workee* workee, uint32_t ring_size)
 	, _response((uint8_t*)malloc(ring_size))
 	, _sem(0)
 	, _exit(false)
-	, _thread (Glib::Threads::Thread::create(sigc::mem_fun(*this, &Worker::run)))
-{}
+{
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setstacksize(&attr, 4096);
+    pthread_create(&_thread, &attr, Worker::run, this);
+    pthread_attr_destroy(&attr);
+}
 
 Worker::~Worker()
 {
 	_exit = true;
 	_sem.post();
-	_thread->join();
+	pthread_join(_thread, NULL);
 }
 
 bool
@@ -110,29 +115,30 @@ Worker::emit_responses()
 	}
 }
 
-void
-Worker::run()
+void*
+Worker::run(void *data)
 {
+	Worker *worker = (Worker *) data;
 	void*  buf      = NULL;
 	size_t buf_size = 0;
 	while (true) {
-		_sem.wait();
-		if (_exit) {
-			return;
+		worker->_sem.wait();
+		if (worker->_exit) {
+			return NULL;
 		}
 
-		uint32_t size = _requests->read_space();
+		uint32_t size = worker->_requests->read_space();
 		if (size < sizeof(size)) {
 			std::cerr << "Worker: no work-data on ring buffer" << std::endl;
 			continue;
 		}
-		while (!verify_message_completeness(_requests)) {
+		while (!worker->verify_message_completeness(worker->_requests)) {
 			::usleep(2000);
-			if (_exit) {
-				return;
+			if (worker->_exit) {
+				return NULL;
 			}
 		}
-		if (_requests->read((uint8_t*)&size, sizeof(size)) < sizeof(size)) {
+		if (worker->_requests->read((uint8_t*)&size, sizeof(size)) < sizeof(size)) {
 			std::cerr << "Worker: Error reading size from request ring" << std::endl;
 			continue;
 		}
@@ -142,11 +148,14 @@ Worker::run()
 			buf_size = size;
 		}
 
-		if (_requests->read((uint8_t*)buf, size) < size) {
+		if (worker->_requests->read((uint8_t*)buf, size) < size) {
 			std::cerr << "Worker: Error reading body from request ring" << std::endl;
 			continue;  // TODO: This is probably fatal
 		}
 
-		_workee->work(size, buf);
+		worker->_workee->work(size, buf);
 	}
+
+    free(buf);
+    return NULL;
 }

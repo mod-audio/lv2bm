@@ -22,7 +22,7 @@
 
 #include <stdint.h>
 
-#include <glibmm/threads.h>
+#include <pthread.h>
 
 #include "pbd/ringbuffer.h"
 #include "pbd/semaphore.h"
@@ -72,7 +72,7 @@ public:
 	void emit_responses();
 
 private:
-	void run();
+	static void* run(void *data);
 	/**
 	   Peek in RB, get size and check if a block of 'size' is available.
 
@@ -90,8 +90,7 @@ private:
 	uint8_t*               _response;
 	PBD::Semaphore         _sem;
 	bool                   _exit;
-	Glib::Threads::Thread* _thread;
-
+    pthread_t              _thread;
 };
 
 #endif
