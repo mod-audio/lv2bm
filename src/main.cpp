@@ -1,11 +1,15 @@
 
 #include <iostream>
 #include "bm.h"
+#include "info.h"
 
 #include <stdlib.h>
 #include <getopt.h>
 
 using namespace std;
+
+// The version is extracted from git history
+extern const char version[];
 
 int main(int argc, char *argv[])
 {
@@ -15,6 +19,7 @@ int main(int argc, char *argv[])
         {"frame-size", required_argument, 0, 'f'},
         {"n-frames", required_argument, 0, 'n'},
         {"full-test", no_argument, 0, 't'},
+        {"version", no_argument, 0, 'V'},
         {0, 0, 0, 0}
     };
 
@@ -24,7 +29,7 @@ int main(int argc, char *argv[])
 
     // parse the command line options
     int opt, option_index;
-    while ((opt = getopt_long(argc, argv, "u:r:f:n:h", long_options, &option_index)) != -1)
+    while ((opt = getopt_long(argc, argv, "hr:f:n:tV", long_options, &option_index)) != -1)
     {
         switch (opt)
         {
@@ -44,17 +49,28 @@ int main(int argc, char *argv[])
                 full_test = true;
                 break;
 
+            case 'V':
+                printf(
+                    "%s version: %s\n"
+                    "source code: https://github.com/portalmod/lv2bm\n",
+                argv[0], version);
+
+                exit(EXIT_SUCCESS);
+                break;
+
             default:
             case 'h':
                 cout << "Usage: " << argv[0] << " [OPTIONS] URIs" << endl;
-                cout << "-r, --rate            Defines the sample rate. Default: " << rate << endl << endl;
-                cout << "-f, --frame-size      Defines the frame size. Equivalent to option -p of the JACK." << endl;
-                cout << "                      Default: " << frame_size << endl << endl;
-                cout << "-n, --n-frames        Defines the number of frames. How many times the run " << endl;
-                cout << "                      function of the plugin will execute. Default: " << n_frames << endl << endl;
-                cout << "--full-test           The full test will run the plugins using differents" << endl;
-                cout << "                      controls values combinations. This test can take a long" << endl;
-                cout << "                      time, depending on the amount of controls the plugin has." << endl << endl;
+                cout << "  -r, --rate            Defines the sample rate. Default: " << rate << endl << endl;
+                cout << "  -f, --frame-size      Defines the frame size. Equivalent to option -p of the JACK." << endl;
+                cout << "                        Default: " << frame_size << endl << endl;
+                cout << "  -n, --n-frames        Defines the number of frames. How many times the run " << endl;
+                cout << "                        function of the plugin will execute. Default: " << n_frames << endl << endl;
+                cout << "  --full-test           The full test will run the plugins using differents" << endl;
+                cout << "                        controls values combinations. This test can take a long" << endl;
+                cout << "  -V, --version         print program version and exit" << endl;
+                cout << "  -h, --help            print this help and exit" << endl;
+                cout << "                        time, depending on the amount of controls the plugin has." << endl << endl;
 
                 if (opt != 'h') exit(EXIT_FAILURE);
                 else exit(EXIT_SUCCESS);
@@ -75,7 +91,6 @@ int main(int argc, char *argv[])
 
 // TODO: dump plugin test information when receive segfault
 // TODO: do something, even a print, when run lv2bm without options
-// TODO: print version
 // TODO: generate MIDI input for plugins that need it
 // TODO: choose differents audio inputs as in http://carlh.net/plugins/torture.php
 // TODO: allow to select the output unit
