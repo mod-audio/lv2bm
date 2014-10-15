@@ -4,27 +4,7 @@
 #include <cstdlib>
 
 static bool g_initialized = false;
-static Lilv::World* g_world = new Lilv::World();
-
-static Lilv::Node g_audio   = g_world->new_uri(LV2_CORE__AudioPort);
-static Lilv::Node g_control = g_world->new_uri(LV2_CORE__ControlPort);
-static Lilv::Node g_input   = g_world->new_uri(LV2_CORE__InputPort);
-static Lilv::Node g_output  = g_world->new_uri(LV2_CORE__OutputPort);
-
-static Lilv::Node g_atom        = g_world->new_uri(LV2_ATOM__AtomPort);
-static Lilv::Node g_atom_chunk  = g_world->new_uri(LV2_ATOM__Chunk);
-static Lilv::Node g_atom_seq    = g_world->new_uri(LV2_ATOM__Sequence);
-static Lilv::Node g_event       = g_world->new_uri(LV2_EVENT__EventPort);
-
-static Lilv::Node g_integer     = g_world->new_uri(LV2_CORE__integer);
-static Lilv::Node g_enumeration = g_world->new_uri(LV2_CORE__enumeration);
-static Lilv::Node g_scale_point = g_world->new_uri(LV2_CORE__scalePoint);
-static Lilv::Node g_toggled     = g_world->new_uri(LV2_CORE__toggled);
-static Lilv::Node g_trigger     = g_world->new_uri(LV2_PORT_PROPS__trigger);
-static Lilv::Node g_logarithmic = g_world->new_uri(LV2_PORT_PROPS__logarithmic);
-
-static Lilv::Node g_worker_sched = g_world->new_uri(LV2_WORKER__schedule);
-static Lilv::Node g_worker_iface = g_world->new_uri(LV2_WORKER__interface);
+static Lilv::World g_world;
 
 URIDMap Plugin::urid_map;
 
@@ -81,20 +61,36 @@ PortGroup::PortGroup(Plugin* p, Lilv::Node type, uint32_t sample_count)
     uint32_t i_input = 0, i_output = 0;
     plugin = p;
 
+    // create nodes
+    Lilv::Node input_node       = g_world.new_uri(LV2_CORE__InputPort);
+    Lilv::Node output_node      = g_world.new_uri(LV2_CORE__OutputPort);
+
+    Lilv::Node integer_node     = g_world.new_uri(LV2_CORE__integer);
+    Lilv::Node enumeration_node = g_world.new_uri(LV2_CORE__enumeration);
+    Lilv::Node scale_point_node = g_world.new_uri(LV2_CORE__scalePoint);
+    Lilv::Node toggled_node     = g_world.new_uri(LV2_CORE__toggled);
+    Lilv::Node trigger_node     = g_world.new_uri(LV2_PORT_PROPS__trigger);
+    Lilv::Node logarithmic_node = g_world.new_uri(LV2_PORT_PROPS__logarithmic);
+
+    Lilv::Node atom_node        = g_world.new_uri(LV2_ATOM__AtomPort);
+    Lilv::Node atom_chunk_node  = g_world.new_uri(LV2_ATOM__Chunk);
+    Lilv::Node atom_seq_node    = g_world.new_uri(LV2_ATOM__Sequence);
+    Lilv::Node event_node       = g_world.new_uri(LV2_EVENT__EventPort);
+
     for (uint32_t i = 0; i < p->num_ports; i++)
     {
         Lilv::Port port = p->plugin->get_port_by_index(i);
 
         // check the port type
-        if (port.is_a(type) || (port.is_a(g_event) && type == g_atom))
+        if (port.is_a(type) || (port.is_a(event_node) && type == atom_node))
         {
             port_data_t *port_data = 0;
 
-            if (port.is_a(g_input))
+            if (port.is_a(input_node))
             {
                 port_data = &inputs_by_index[i_input++];
             }
-            else if (port.is_a(g_output))
+            else if (port.is_a(output_node))
             {
                 port_data = &outputs_by_index[i_output++];
             }
@@ -112,12 +108,12 @@ PortGroup::PortGroup(Plugin* p, Lilv::Node type, uint32_t sample_count)
             port_data->symbol = symbol.as_string();
 
             // properties
-            port_data->is_integer     = port.has_property(g_integer)     ? true : false;
-            port_data->is_logarithmic = port.has_property(g_logarithmic) ? true : false;
-            port_data->is_enumeration = port.has_property(g_enumeration) ? true : false;
-            port_data->is_scale_point = port.has_property(g_scale_point) ? true : false;
-            port_data->is_toggled     = port.has_property(g_toggled)     ? true : false;
-            port_data->is_trigger     = port.has_property(g_trigger)     ? true : false;
+            port_data->is_integer     = port.has_property(integer_node)     ? true : false;
+            port_data->is_logarithmic = port.has_property(logarithmic_node) ? true : false;
+            port_data->is_enumeration = port.has_property(enumeration_node) ? true : false;
+            port_data->is_scale_point = port.has_property(scale_point_node) ? true : false;
+            port_data->is_toggled     = port.has_property(toggled_node)     ? true : false;
+            port_data->is_trigger     = port.has_property(trigger_node)     ? true : false;
 
             // check whether has scale points and populate the vectors
             port_data->scale_points.count = 0;
@@ -137,9 +133,11 @@ PortGroup::PortGroup(Plugin* p, Lilv::Node type, uint32_t sample_count)
                         port_data->scale_points.count++;
                     }
                 }
+                lilv_scale_points_free(sp_coll);
             }
 
             // data buffer
+            port_data->buffer_size = sample_count;
             if (sample_count > 1)
             {
                 port_data->buffer = new float[sample_count];
@@ -153,24 +151,24 @@ PortGroup::PortGroup(Plugin* p, Lilv::Node type, uint32_t sample_count)
             p->instance->connect_port(i, port_data->buffer);
 
             // map the ports by symbol
-            if (port.is_a(g_input))
+            if (port.is_a(input_node))
             {
                 inputs_by_symbol[port_data->symbol] = port_data;
             }
-            else if (port.is_a(g_output))
+            else if (port.is_a(output_node))
             {
                 outputs_by_symbol[port_data->symbol] = port_data;
             }
 
             // check if is atom or event
             port_data->event_buffer = NULL;
-            if (port.is_a(g_atom) || port.is_a(g_event))
+            if (port.is_a(atom_node) || port.is_a(event_node))
             {
                 port_data->event_buffer =
                     lv2_evbuf_new(EVENT_BUFFER_SIZE,
-                                  port.is_a(g_atom) ? LV2_EVBUF_ATOM : LV2_EVBUF_EVENT,
-                                  Plugin::urid_map.map[g_atom_chunk.as_string()],
-                                  Plugin::urid_map.map[g_atom_seq.as_string()]);
+                                  port.is_a(atom_node) ? LV2_EVBUF_ATOM : LV2_EVBUF_EVENT,
+                                  Plugin::urid_map.map[atom_chunk_node.as_string()],
+                                  Plugin::urid_map.map[atom_seq_node.as_string()]);
 
                 p->instance->connect_port(i, lv2_evbuf_get_buffer(port_data->event_buffer));
             }
@@ -180,7 +178,33 @@ PortGroup::PortGroup(Plugin* p, Lilv::Node type, uint32_t sample_count)
 
 PortGroup::~PortGroup()
 {
-    // TODO
+    for (uint32_t i = 0; i < inputs_by_index.size(); i++)
+    {
+        port_data_t *port_data = &inputs_by_index[i];
+        if (port_data->buffer && port_data->buffer_size > 1)
+        {
+            delete[] port_data->buffer;
+        }
+
+        if (port_data->event_buffer)
+        {
+            lv2_evbuf_free(port_data->event_buffer);
+        }
+    }
+
+    for (uint32_t i = 0; i < outputs_by_index.size(); i++)
+    {
+        port_data_t *port_data = &outputs_by_index[i];
+        if (port_data->buffer && port_data->buffer_size > 1)
+        {
+            delete[] port_data->buffer;
+        }
+
+        if (port_data->event_buffer)
+        {
+            lv2_evbuf_free(port_data->event_buffer);
+        }
+    }
 }
 
 void PortGroup::set_value(std::string preset)
@@ -224,7 +248,7 @@ Plugin::Plugin(std::string uri, uint32_t sample_rate, uint32_t sample_count)
 {
     if (!g_initialized)
     {
-        g_world->load_all();
+        g_world.load_all();
         g_initialized = true;
     }
 
@@ -232,8 +256,8 @@ Plugin::Plugin(std::string uri, uint32_t sample_rate, uint32_t sample_count)
     this->sample_rate = sample_rate;
     this->sample_count = sample_count;
 
-    Lilv::Plugins plugins_list = g_world->get_all_plugins();
-    Lilv::Node plugin_uri = g_world->new_uri(uri.c_str());
+    Lilv::Plugins plugins_list = g_world.get_all_plugins();
+    Lilv::Node plugin_uri = g_world.new_uri(uri.c_str());
     Lilv::Plugin p = plugins_list.get_by_uri(plugin_uri);
     plugin = &p;
 
@@ -274,7 +298,9 @@ Plugin::Plugin(std::string uri, uint32_t sample_rate, uint32_t sample_count)
     work_schedule_feature.data = NULL;
     worker = NULL;
 
-    if (plugin->has_feature(g_worker_sched))
+    // create nodes
+    Lilv::Node worker_sched_node = g_world.new_uri(LV2_WORKER__schedule);
+    if (plugin->has_feature(worker_sched_node))
     {
         LV2_Worker_Schedule* schedule =
             (LV2_Worker_Schedule*) malloc(sizeof(LV2_Worker_Schedule));
@@ -291,27 +317,47 @@ Plugin::Plugin(std::string uri, uint32_t sample_rate, uint32_t sample_count)
 
     // worker interface
     work_iface = NULL;
-    if (plugin->has_extension_data(g_worker_iface))
+    Lilv::Node worker_iface_node = g_world.new_uri(LV2_WORKER__interface);
+    if (plugin->has_extension_data(worker_iface_node))
     {
         work_iface =
             (const LV2_Worker_Interface*) instance->get_extension_data(LV2_WORKER__interface);
     }
 
+    // create nodes
+    Lilv::Node atom_node    = g_world.new_uri(LV2_ATOM__AtomPort);
+    Lilv::Node audio_node   = g_world.new_uri(LV2_CORE__AudioPort);
+    Lilv::Node control_node = g_world.new_uri(LV2_CORE__ControlPort);
+
     // create the ports
-    audio = new PortGroup(this, g_audio, sample_count);
-    control = new PortGroup(this, g_control);
-    atom = new PortGroup(this, g_atom);
+    audio = new PortGroup(this, audio_node, sample_count);
+    control = new PortGroup(this, control_node);
+    atom = new PortGroup(this, atom_node);
 
     instance->activate();
 }
 
 Plugin::~Plugin()
 {
+    instance->deactivate();
+    instance->free();
+    delete instance;
+
     if (ranges.min) delete[] ranges.min;
     if (ranges.max) delete[] ranges.max;
     if (ranges.def) delete[] ranges.def;
 
-    if (worker) delete worker;
+    if (worker)
+    {
+        if (work_schedule_feature.data)
+            free(work_schedule_feature.data);
+
+        delete worker;
+    }
+
+    if (features)
+        free(features);
+
     if (audio) delete audio;
     if (control) delete control;
     if (atom) delete atom;

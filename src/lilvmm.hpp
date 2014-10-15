@@ -67,6 +67,7 @@ uri_to_path(const char* uri) {
 struct Node {
 	inline Node(const LilvNode* node) : me(lilv_node_duplicate(node)) {}
 	inline Node(const Node& copy)     : me(lilv_node_duplicate(copy.me)) {}
+	inline Node(LilvNode* node)       : me(node) {}
 
 	inline ~Node() { lilv_node_free(me); }
 
@@ -291,6 +292,7 @@ struct Instance {
 	LILV_WRAP0_VOID(instance, activate);
 	LILV_WRAP1_VOID(instance, run, unsigned, sample_count);
 	LILV_WRAP0_VOID(instance, deactivate);
+	LILV_WRAP0_VOID(instance, free);
 
 	inline const void* get_extension_data(const char* uri) {
 		return lilv_instance_get_extension_data(me, uri);

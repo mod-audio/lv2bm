@@ -56,6 +56,7 @@ struct port_data_t
     float value, min, max, def;
     scale_point_t scale_points;
 
+    uint32_t buffer_size;
     float *buffer;
     LV2_Evbuf *event_buffer;
 

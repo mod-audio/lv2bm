@@ -44,6 +44,7 @@ Bench::Bench(const char* uri, uint32_t sample_rate, uint32_t frame_size, uint32_
 
 Bench::~Bench()
 {
+    delete plugin;
 }
 
 void Bench::slicing_parameters(void)
@@ -97,7 +98,7 @@ void Bench::test_points(uint32_t depth, vector<uint32_t> & params, vector<uint32
             }
 
             // enumeration and scale point
-            if (plugin->control->inputs_by_index[i].is_enumeration || 
+            if (plugin->control->inputs_by_index[i].is_enumeration ||
                 plugin->control->inputs_by_index[i].is_scale_point)
             {
                 uint32_t index = params[i];
@@ -105,7 +106,7 @@ void Bench::test_points(uint32_t depth, vector<uint32_t> & params, vector<uint32
             }
 
             // TODO: toggle and trigger
-            if (plugin->control->inputs_by_index[i].is_toggled || 
+            if (plugin->control->inputs_by_index[i].is_toggled ||
                 plugin->control->inputs_by_index[i].is_trigger)
             {
             }
@@ -139,13 +140,13 @@ void Bench::run_and_calc(bench_info_t* var)
 
     var->average = (var->total / (double)n_frames);
     double jack_latency = (double) frame_size / sample_rate;
-    var->jack_load = 2.0 * (var->average * 100.0) / jack_latency;    
+    var->jack_load = 2.0 * (var->average * 100.0) / jack_latency;
 }
 
 void Bench::process(void)
-{    
+{
     float *input = new float[frame_size];
-    
+
     // TODO: select input buffer
     // random: 2 * ((float) rand() / (float) RAND_MAX) - 1.0;
     for (uint32_t i = 0; i < frame_size; i++)
@@ -178,7 +179,7 @@ void Bench::process(void)
         if (min.jack_load > greater.jack_load) greater = min;
         if (max.jack_load > greater.jack_load) greater = max;
         if (def.jack_load > greater.jack_load) greater = def;
-    
+
         if (min.jack_load < lower.jack_load) lower = min;
         if (max.jack_load < lower.jack_load) lower = max;
         if (def.jack_load < lower.jack_load) lower = def;
