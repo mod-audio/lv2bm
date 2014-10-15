@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <getopt.h>
 
+using namespace std;
+
 int main(int argc, char *argv[])
 {
     static struct option long_options[] = {
@@ -71,7 +73,7 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-// FIXME: memory issues: valgrind --leak-check=full --show-reachable=yes --log-file=/tmp/valgrind.log ./lv2bm
+// TODO: dump plugin test information when receive segfault
 // TODO: do something, even a print, when run lv2bm without options
 // TODO: print version
 // TODO: generate MIDI input for plugins that need it
