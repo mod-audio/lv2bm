@@ -52,6 +52,7 @@ $(PROG): get_info $(OBJ)
 
 # install rule
 install:
+	install -d $(INSTALL_PATH)
 	install $(PROG) $(INSTALL_PATH)
 
 # clean rule
