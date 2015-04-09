@@ -5,12 +5,12 @@ lv2bm
 About
 -----
 
-lv2bm is a benchmark tool to LV2 plugins, it was inspired on lv2bench from lilv.
-It features:
+lv2bm is a benchmark tool for LV2 plugins, it was inspired in the lv2bench of lilv utils.
+Its features are:
 
 - allows to select which URIs to test
 - uses minimum, maximum and default control values to run the plugins
-- uses several controls combinations in the full test mode
+- has a full test mode which check all combinations for discrete controls
 - the output shows the JACK load percent
 - can be used along with valgrind to detect plugin memory issues
 
@@ -65,14 +65,14 @@ scale points and toggle will have all points tested. The other type of controls 
 sliced resulting in 4 points to be tested. Along with valgrind this evaluation is useful to
 stress the plugin trying find out segfaults or memory issues (leak, invalid read/write, ...).
 
-Following is a real case of use. A time ago the CabinetIV plugin, of the CAPS collection, owned
+Following is a real case of use. Sometime the CabinetIV plugin, of the CAPS collection, owned
 a bug that was causing a segfault just when the model parameter was configured to value "Sixty-two".
-Moreover, the segfault just happened in a specific machine (little RAM memory). Several hours would be
-saved with this tool in hands.
+Moreover, the segfault just happened in a specific machine (little RAM memory). Although the symptoms,
+the bug wasn't related to the "Sixty-two" option. Probably several hours would be saved using this tools.
 
 If you interested in reproduce this situation to familiarize yourself with the procedure, you can reach
 our caps-lv2 repository and checkout to the commit just before the bug resolution (383a16c2), build it,
-install to your LV2 path and try:
+install to your LV2 path and run it using the following command:
 
     valgrind --leak-check=full --show-reachable=no lv2bm http://portalmod.com/plugins/caps/CabinetIV
 
@@ -183,3 +183,13 @@ Examples of use
        DefValues    0.00019513   0.00000305     0.105044
        MaxValues    0.00011171   0.00000175     0.060138
     ...
+
+Be aware that depending on how many controls the plugin being tested has, the tool can take
+a countless time to finish.
+
+
+TODO
+----
+
+This tool has some TODOs comments arround the code, you can check them
+grep'ing the src directory by "TODO".
