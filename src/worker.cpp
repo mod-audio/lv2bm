@@ -44,6 +44,9 @@ Worker::~Worker()
 	_exit = true;
 	_sem.post();
 	pthread_join(_thread, NULL);
+	delete _requests;
+	delete _responses;
+	free(_response);
 }
 
 bool
