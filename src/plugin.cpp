@@ -2,6 +2,7 @@
 #include "plugin.h"
 #include <iostream>
 #include <cstdlib>
+#include <stdexcept>
 
 static bool g_initialized = false;
 static Lilv::World g_world;
@@ -245,6 +246,7 @@ float PortGroup::get_value(uint32_t index)
 }
 
 Plugin::Plugin(std::string uri, uint32_t sample_rate, uint32_t sample_count)
+    : instance(NULL)
 {
     if (!g_initialized)
     {
@@ -259,6 +261,10 @@ Plugin::Plugin(std::string uri, uint32_t sample_rate, uint32_t sample_count)
     Lilv::Plugins plugins_list = g_world.get_all_plugins();
     Lilv::Node plugin_uri = g_world.new_uri(uri.c_str());
     Lilv::Plugin p = plugins_list.get_by_uri(plugin_uri);
+
+    if (!p)
+        throw std::runtime_error("Invalid URI or missing plugin");
+
     plugin = &p;
 
     // get plugin ranges
@@ -339,6 +345,9 @@ Plugin::Plugin(std::string uri, uint32_t sample_rate, uint32_t sample_count)
 
 Plugin::~Plugin()
 {
+    if (!instance)
+        return;
+
     instance->deactivate();
     instance->free();
     delete instance;

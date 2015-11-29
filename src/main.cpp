@@ -80,10 +80,14 @@ int main(int argc, char *argv[])
     // run the benchmark
     for (int i = 0; i < (argc - optind); i++)
     {
-        Bench bench = Bench(argv[optind+i], rate, frame_size, n_frames);
-        bench.full_test = full_test;
-        bench.process();
-        bench.print();
+        try
+        {
+            Bench bench = Bench(argv[optind+i], rate, frame_size, n_frames);
+            bench.full_test = full_test;
+            bench.process();
+            bench.print();
+        }
+        catch(...) {}
     }
 
     return 0;
