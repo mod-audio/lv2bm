@@ -27,9 +27,13 @@ int main(int argc, char *argv[])
     unsigned int rate = 44100, frame_size = 256, n_frames = 64;
     bool full_test = false;
 
+    bool no_arguments_passed = false;
+    if (argc < 2)
+        no_arguments_passed = true;
+
     // parse the command line options
     int opt, option_index;
-    while ((opt = getopt_long(argc, argv, "hr:f:n:tV", long_options, &option_index)) != -1)
+    while ((opt = getopt_long(argc, argv, "hr:f:n:tV", long_options, &option_index)) != -1 || no_arguments_passed)
     {
         switch (opt)
         {
@@ -67,7 +71,7 @@ int main(int argc, char *argv[])
                 cout << "  -n, --n-frames        Defines the number of frames. How many times the run " << endl;
                 cout << "                        function of the plugin will execute. Default: " << n_frames << endl << endl;
                 cout << "  --full-test           The full test will run the plugins using differents" << endl;
-                cout << "                        controls values combinations. This test can take a long" << endl;
+                cout << "                        controls values combinations. This test might take a long time" << endl;
                 cout << "  -V, --version         print program version and exit" << endl;
                 cout << "  -h, --help            print this help and exit" << endl;
                 cout << "                        time, depending on the amount of controls the plugin has." << endl << endl;
@@ -94,7 +98,6 @@ int main(int argc, char *argv[])
 }
 
 // TODO: dump plugin test information when receive segfault
-// TODO: do something, even a print, when run lv2bm without options
 // TODO: generate MIDI input for plugins that need it
 // TODO: choose differents audio inputs as in http://carlh.net/plugins/torture.php
 // TODO: allow to select the output unit

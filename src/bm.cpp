@@ -191,7 +191,7 @@ void Bench::process(void)
 void Bench::print(void)
 {
     printf("Plugin: %s\n", plugin->uri.c_str());
-    printf("%12s%14s%13s%13s\n", "TestName", "TotalTime(s)", "AvrTime(s)", "JackLoad(%)");
+    printf("%12s%14s%13s%13s\n", "TestName", "TotalTime(s)", "AvrTime(s)", "JackLoad(%%)");
     printf("%12s%14.8f%13.8f%13f\n", "MinValues", min.total, min.average, min.jack_load);
     printf("%12s%14.8f%13.8f%13f\n", "DefValues", def.total, def.average, def.jack_load);
     printf("%12s%14.8f%13.8f%13f\n", "MaxValues", max.total, max.average, max.jack_load);
