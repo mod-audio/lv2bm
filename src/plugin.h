@@ -54,20 +54,17 @@
 class Plugin;
 class PortGroup;
 
-struct param_range_t
-{
+struct param_range_t {
     float *min, *max, *def;
 };
 
-struct scale_point_t
-{
+struct scale_point_t {
     uint32_t count;
     std::vector<const char*> labels;
     std::vector<float> values;
 };
 
-struct port_data_t
-{
+struct port_data_t {
     const char *name, *symbol;
     float value, min, max, def;
     scale_point_t scale_points;
@@ -89,8 +86,7 @@ struct port_data_t
     }
 };
 
-class PortGroup
-{
+class PortGroup {
 public:
     PortGroup(Plugin* p, Lilv::Node type, uint32_t sample_count = 1);
     ~PortGroup();
@@ -108,8 +104,7 @@ public:
     float get_value(uint32_t index);
 };
 
-class Plugin : public Workee
-{
+class Plugin : public Workee {
 public:
     Plugin(std::string uri, uint32_t sample_rate, uint32_t sample_count);
     ~Plugin();
@@ -131,8 +126,7 @@ public:
 
     // urid
     static URIDMap urid_map;
-    struct URIDs
-    {
+    struct URIDs {
         LV2_URID atom_Int;
         LV2_URID atom_Float;
         LV2_URID atom_Chunk;

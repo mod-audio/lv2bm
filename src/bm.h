@@ -22,14 +22,12 @@
 
 using namespace std;
 
-struct bench_info_t
-{
+struct bench_info_t {
     double total, average, jack_load;
     std::map<uint32_t,port_data_t> plugin_preset;
 };
 
-class Bench
-{
+class Bench {
 private:
     void slicing_parameters(void);
     std::vector<uint32_t> params;

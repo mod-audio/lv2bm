@@ -57,7 +57,7 @@ work_schedule(LV2_Worker_Schedule_Handle handle,
 
     // Enqueue message for the worker thread
     return plugin->worker->schedule(size, data) ?
-        LV2_WORKER_SUCCESS : LV2_WORKER_ERR_UNKNOWN;
+           LV2_WORKER_SUCCESS : LV2_WORKER_ERR_UNKNOWN;
 }
 
 // Called by the plugin to respond to non-RT work
@@ -70,7 +70,7 @@ work_respond(LV2_Worker_Respond_Handle handle,
 
     // Enqueue response for the worker
     return plugin->worker->respond(size, data) ?
-        LV2_WORKER_SUCCESS : LV2_WORKER_ERR_UNKNOWN;
+           LV2_WORKER_SUCCESS : LV2_WORKER_ERR_UNKNOWN;
 }
 
 PortGroup::PortGroup(Plugin* p, Lilv::Node type, uint32_t sample_count)
@@ -94,21 +94,17 @@ PortGroup::PortGroup(Plugin* p, Lilv::Node type, uint32_t sample_count)
     Lilv::Node atom_seq_node    = g_world.new_uri(LV2_ATOM__Sequence);
     Lilv::Node event_node       = g_world.new_uri(LV2_EVENT__EventPort);
 
-    for (uint32_t i = 0; i < p->num_ports; i++)
-    {
+    for (uint32_t i = 0; i < p->num_ports; i++) {
         Lilv::Port port = p->plugin->get_port_by_index(i);
 
         // check the port type
-        if (port.is_a(type) || (port.is_a(event_node) && type == atom_node))
-        {
+        if (port.is_a(type) || (port.is_a(event_node) && type == atom_node)) {
             port_data_t *port_data = 0;
 
-            if (port.is_a(input_node))
-            {
+            if (port.is_a(input_node)) {
                 port_data = &inputs_by_index[i_input++];
             }
-            else if (port.is_a(output_node))
-            {
+            else if (port.is_a(output_node)) {
                 port_data = &outputs_by_index[i_output++];
             }
 
@@ -134,17 +130,14 @@ PortGroup::PortGroup(Plugin* p, Lilv::Node type, uint32_t sample_count)
 
             // check whether has scale points and populate the vectors
             port_data->scale_points.count = 0;
-            if (port_data->is_scale_point || port_data->is_enumeration)
-            {
+            if (port_data->is_scale_point || port_data->is_enumeration) {
                 LilvScalePoints* sp_coll = port.get_scale_points();
-                LILV_FOREACH(scale_points, i_sp, sp_coll)
-                {
+                LILV_FOREACH(scale_points, i_sp, sp_coll) {
                     const LilvScalePoint* sp = lilv_scale_points_get(sp_coll, i_sp);
                     const LilvNode* label = lilv_scale_point_get_label(sp);
                     const LilvNode* value = lilv_scale_point_get_value(sp);
 
-                    if (label && (lilv_node_is_float(value) || lilv_node_is_int(value)))
-                    {
+                    if (label && (lilv_node_is_float(value) || lilv_node_is_int(value))) {
                         port_data->scale_points.labels.push_back(lilv_node_as_string(label));
                         port_data->scale_points.values.push_back(lilv_node_as_float(value));
                         port_data->scale_points.count++;
@@ -155,12 +148,10 @@ PortGroup::PortGroup(Plugin* p, Lilv::Node type, uint32_t sample_count)
 
             // data buffer
             port_data->buffer_size = sample_count;
-            if (sample_count > 1)
-            {
+            if (sample_count > 1) {
                 port_data->buffer = new float[sample_count];
             }
-            else
-            {
+            else {
                 port_data->buffer = &(port_data->value);
             }
 
@@ -168,19 +159,16 @@ PortGroup::PortGroup(Plugin* p, Lilv::Node type, uint32_t sample_count)
             p->instance->connect_port(i, port_data->buffer);
 
             // map the ports by symbol
-            if (port.is_a(input_node))
-            {
+            if (port.is_a(input_node)) {
                 inputs_by_symbol[port_data->symbol] = port_data;
             }
-            else if (port.is_a(output_node))
-            {
+            else if (port.is_a(output_node)) {
                 outputs_by_symbol[port_data->symbol] = port_data;
             }
 
             // check if is atom or event
             port_data->event_buffer = NULL;
-            if (port.is_a(atom_node) || port.is_a(event_node))
-            {
+            if (port.is_a(atom_node) || port.is_a(event_node)) {
                 port_data->event_buffer =
                     lv2_evbuf_new(EVENT_BUFFER_SIZE,
                                   port.is_a(atom_node) ? LV2_EVBUF_ATOM : LV2_EVBUF_EVENT,
@@ -195,30 +183,24 @@ PortGroup::PortGroup(Plugin* p, Lilv::Node type, uint32_t sample_count)
 
 PortGroup::~PortGroup()
 {
-    for (uint32_t i = 0; i < inputs_by_index.size(); i++)
-    {
+    for (uint32_t i = 0; i < inputs_by_index.size(); i++) {
         port_data_t *port_data = &inputs_by_index[i];
-        if (port_data->buffer && port_data->buffer_size > 1)
-        {
+        if (port_data->buffer && port_data->buffer_size > 1) {
             delete[] port_data->buffer;
         }
 
-        if (port_data->event_buffer)
-        {
+        if (port_data->event_buffer) {
             lv2_evbuf_free(port_data->event_buffer);
         }
     }
 
-    for (uint32_t i = 0; i < outputs_by_index.size(); i++)
-    {
+    for (uint32_t i = 0; i < outputs_by_index.size(); i++) {
         port_data_t *port_data = &outputs_by_index[i];
-        if (port_data->buffer && port_data->buffer_size > 1)
-        {
+        if (port_data->buffer && port_data->buffer_size > 1) {
             delete[] port_data->buffer;
         }
 
-        if (port_data->event_buffer)
-        {
+        if (port_data->event_buffer) {
             lv2_evbuf_free(port_data->event_buffer);
         }
     }
@@ -226,24 +208,18 @@ PortGroup::~PortGroup()
 
 void PortGroup::set_value(std::string preset)
 {
-    if (preset == MINIMUM_PRESET_LABEL)
-    {
-        for (uint32_t i = 0; i < inputs_by_index.size(); i++)
-        {
+    if (preset == MINIMUM_PRESET_LABEL) {
+        for (uint32_t i = 0; i < inputs_by_index.size(); i++) {
             inputs_by_index[i].value = this->inputs_by_index[i].min;
         }
     }
-    else if (preset == MAXIMUM_PRESET_LABEL)
-    {
-        for (uint32_t i = 0; i < this->inputs_by_index.size(); i++)
-        {
+    else if (preset == MAXIMUM_PRESET_LABEL) {
+        for (uint32_t i = 0; i < this->inputs_by_index.size(); i++) {
             inputs_by_index[i].value = this->inputs_by_index[i].max;
         }
     }
-    else if (preset == DEFAULT_PRESET_LABEL)
-    {
-        for (uint32_t i = 0; i < this->inputs_by_index.size(); i++)
-        {
+    else if (preset == DEFAULT_PRESET_LABEL) {
+        for (uint32_t i = 0; i < this->inputs_by_index.size(); i++) {
             inputs_by_index[i].value = this->inputs_by_index[i].def;
         }
     }
@@ -264,8 +240,7 @@ float PortGroup::get_value(uint32_t index)
 Plugin::Plugin(std::string uri, uint32_t sample_rate, uint32_t sample_count)
     : instance(NULL)
 {
-    if (!g_initialized)
-    {
+    if (!g_initialized) {
         g_world.load_all();
         g_initialized = true;
     }
@@ -301,14 +276,22 @@ Plugin::Plugin(std::string uri, uint32_t sample_rate, uint32_t sample_count)
 
     // options
     LV2_Options_Option options[] = {
-        { LV2_OPTIONS_INSTANCE, 0, urids.parameters_sampleRate,
-          sizeof(int32_t), urids.atom_Int, &sample_rate },
-        { LV2_OPTIONS_INSTANCE, 0, urids.bufsize_minBlockLength,
-          sizeof(int32_t), urids.atom_Int, &sample_count },
-        { LV2_OPTIONS_INSTANCE, 0, urids.bufsize_maxBlockLength,
-          sizeof(int32_t), urids.atom_Int, &sample_count },
-        { LV2_OPTIONS_INSTANCE, 0, urids.bufsize_sequenceSize,
-          sizeof(int32_t), urids.atom_Int, &seq_size },
+        {
+            LV2_OPTIONS_INSTANCE, 0, urids.parameters_sampleRate,
+            sizeof(int32_t), urids.atom_Int, &sample_rate
+        },
+        {
+            LV2_OPTIONS_INSTANCE, 0, urids.bufsize_minBlockLength,
+            sizeof(int32_t), urids.atom_Int, &sample_count
+        },
+        {
+            LV2_OPTIONS_INSTANCE, 0, urids.bufsize_maxBlockLength,
+            sizeof(int32_t), urids.atom_Int, &sample_count
+        },
+        {
+            LV2_OPTIONS_INSTANCE, 0, urids.bufsize_sequenceSize,
+            sizeof(int32_t), urids.atom_Int, &seq_size
+        },
         { LV2_OPTIONS_INSTANCE, 0, 0, 0, 0, NULL }
     };
     options_feature.URI = LV2_OPTIONS__options;
@@ -322,8 +305,7 @@ Plugin::Plugin(std::string uri, uint32_t sample_rate, uint32_t sample_count)
 
     // create nodes
     Lilv::Node worker_sched_node = g_world.new_uri(LV2_WORKER__schedule);
-    if (plugin->has_feature(worker_sched_node))
-    {
+    if (plugin->has_feature(worker_sched_node)) {
         LV2_Worker_Schedule* schedule =
             (LV2_Worker_Schedule*) malloc(sizeof(LV2_Worker_Schedule));
 
@@ -340,8 +322,7 @@ Plugin::Plugin(std::string uri, uint32_t sample_rate, uint32_t sample_count)
     // worker interface
     work_iface = NULL;
     Lilv::Node worker_iface_node = g_world.new_uri(LV2_WORKER__interface);
-    if (plugin->has_extension_data(worker_iface_node))
-    {
+    if (plugin->has_extension_data(worker_iface_node)) {
         work_iface =
             (const LV2_Worker_Interface*) instance->get_extension_data(LV2_WORKER__interface);
     }
@@ -372,8 +353,7 @@ Plugin::~Plugin()
     if (ranges.max) delete[] ranges.max;
     if (ranges.def) delete[] ranges.def;
 
-    if (worker)
-    {
+    if (worker) {
         if (work_schedule_feature.data)
             free(work_schedule_feature.data);
 
@@ -391,16 +371,14 @@ Plugin::~Plugin()
 void Plugin::run(uint32_t sample_count)
 {
     // event input ports
-    for (uint32_t i = 0; i < atom->inputs_by_index.size(); i++)
-    {
+    for (uint32_t i = 0; i < atom->inputs_by_index.size(); i++) {
         lv2_evbuf_reset(atom->inputs_by_index[i].event_buffer, true);
 
         // TODO: write input MIDI events to test
     }
 
     // reset event output ports
-    for (uint32_t i = 0; i < atom->outputs_by_index.size(); i++)
-    {
+    for (uint32_t i = 0; i < atom->outputs_by_index.size(); i++) {
         lv2_evbuf_reset(atom->outputs_by_index[i].event_buffer, false);
     }
 
@@ -408,8 +386,7 @@ void Plugin::run(uint32_t sample_count)
     instance->run(sample_count);
 
     // notify the plugin the run cycle is finished
-    if (work_iface)
-    {
+    if (work_iface) {
         worker->emit_responses();
         if (work_iface->end_run) work_iface->end_run(instance->get_handle());
     }

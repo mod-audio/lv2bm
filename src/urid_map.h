@@ -11,8 +11,7 @@
 #include <lv2/lv2plug.in/ns/ext/urid/urid.h>
 #include <lv2/lv2plug.in/ns/ext/uri-map/uri-map.h>
 
-class URIDMap
-{
+class URIDMap {
 public:
     URIDMap();
 
