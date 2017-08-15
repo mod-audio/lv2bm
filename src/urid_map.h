@@ -1,6 +1,4 @@
-
-// code from Ardour
-
+// code extracted from Ardour
 
 #ifndef URID_MAP
 #define URID_MAP
@@ -17,7 +15,7 @@ class URIDMap
 {
 public:
     URIDMap();
-    
+
     LV2_Feature uri_map_feature;
     LV2_URI_Map_Feature uri_map_feature_data;
     LV2_URID_Map urid_map_feature_data;
@@ -35,5 +33,4 @@ public:
     Unmap unmap;
 };
 
-
-#endif 
+#endif

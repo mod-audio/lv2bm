@@ -24,7 +24,7 @@
 #include <glib.h>
 
 template<class T>
-class RingBuffer 
+class RingBuffer
 {
   public:
 	RingBuffer (guint sz) {
@@ -37,7 +37,7 @@ class RingBuffer
 	buf = new T[size];
 	reset ();
 	}
-	
+
 	virtual ~RingBuffer() {
 		delete [] buf;
 	}
@@ -53,7 +53,7 @@ class RingBuffer
 		g_atomic_int_set (&write_idx, w);
 		g_atomic_int_set (&read_idx, r);
 	}
-	
+
 	guint read  (T *dest, guint cnt);
 	guint write (T const * src,  guint cnt);
 
@@ -64,25 +64,25 @@ class RingBuffer
 
 	void get_read_vector (rw_vector *);
 	void get_write_vector (rw_vector *);
-	
+
 	void decrement_read_idx (guint cnt) {
 		g_atomic_int_set (&read_idx, (g_atomic_int_get(&read_idx) - cnt) & size_mask);
-	}                
+	}
 
 	void increment_read_idx (guint cnt) {
 		g_atomic_int_set (&read_idx, (g_atomic_int_get(&read_idx) + cnt) & size_mask);
-	}                
+	}
 
 	void increment_write_idx (guint cnt) {
 		g_atomic_int_set (&write_idx,  (g_atomic_int_get(&write_idx) + cnt) & size_mask);
-	}                
+	}
 
 	guint write_space () {
 		guint w, r;
-		
+
 		w = g_atomic_int_get (&write_idx);
 		r = g_atomic_int_get (&read_idx);
-		
+
 		if (w > r) {
 			return ((r - w + size) & size_mask) - 1;
 		} else if (w < r) {
@@ -91,13 +91,13 @@ class RingBuffer
 			return size - 1;
 		}
 	}
-	
+
 	guint read_space () {
 		guint w, r;
-		
+
 		w = g_atomic_int_get (&write_idx);
 		r = g_atomic_int_get (&read_idx);
-		
+
 		if (w > r) {
 			return w - r;
 		} else {
@@ -118,7 +118,7 @@ class RingBuffer
 	guint size_mask;
 };
 
-template<class T> guint 
+template<class T> guint
 RingBuffer<T>::read (T *dest, guint cnt)
 {
         guint free_cnt;
@@ -134,7 +134,7 @@ RingBuffer<T>::read (T *dest, guint cnt)
         }
 
         to_read = cnt > free_cnt ? free_cnt : cnt;
-        
+
         cnt2 = priv_read_idx + to_read;
 
         if (cnt2 > size) {
@@ -144,7 +144,7 @@ RingBuffer<T>::read (T *dest, guint cnt)
                 n1 = to_read;
                 n2 = 0;
         }
-        
+
         memcpy (dest, &buf[priv_read_idx], n1 * sizeof (T));
         priv_read_idx = (priv_read_idx + n1) & size_mask;
 
@@ -174,7 +174,7 @@ RingBuffer<T>::write (T const *src, guint cnt)
         }
 
         to_write = cnt > free_cnt ? free_cnt : cnt;
-        
+
         cnt2 = priv_write_idx + to_write;
 
         if (cnt2 > size) {
@@ -204,10 +204,10 @@ RingBuffer<T>::get_read_vector (RingBuffer<T>::rw_vector *vec)
 	guint free_cnt;
 	guint cnt2;
 	guint w, r;
-	
+
 	w = g_atomic_int_get (&write_idx);
 	r = g_atomic_int_get (&read_idx);
-	
+
 	if (w > r) {
 		free_cnt = w - r;
 	} else {
@@ -218,7 +218,7 @@ RingBuffer<T>::get_read_vector (RingBuffer<T>::rw_vector *vec)
 
 	if (cnt2 > size) {
 		/* Two part vector: the rest of the buffer after the
-		   current write ptr, plus some from the start of 
+		   current write ptr, plus some from the start of
 		   the buffer.
 		*/
 
@@ -228,9 +228,9 @@ RingBuffer<T>::get_read_vector (RingBuffer<T>::rw_vector *vec)
 		vec->len[1] = cnt2 & size_mask;
 
 	} else {
-		
+
 		/* Single part vector: just the rest of the buffer */
-		
+
 		vec->buf[0] = &buf[r];
 		vec->len[0] = free_cnt;
 		vec->buf[1] = 0;
@@ -245,10 +245,10 @@ RingBuffer<T>::get_write_vector (RingBuffer<T>::rw_vector *vec)
 	guint free_cnt;
 	guint cnt2;
 	guint w, r;
-	
+
 	w = g_atomic_int_get (&write_idx);
 	r = g_atomic_int_get (&read_idx);
-	
+
 	if (w > r) {
 		free_cnt = ((r - w + size) & size_mask) - 1;
 	} else if (w < r) {
@@ -256,13 +256,13 @@ RingBuffer<T>::get_write_vector (RingBuffer<T>::rw_vector *vec)
 	} else {
 		free_cnt = size - 1;
 	}
-	
+
 	cnt2 = w + free_cnt;
 
 	if (cnt2 > size) {
-		
+
 		/* Two part vector: the rest of the buffer after the
-		   current write ptr, plus some from the start of 
+		   current write ptr, plus some from the start of
 		   the buffer.
 		*/
 
@@ -276,6 +276,5 @@ RingBuffer<T>::get_write_vector (RingBuffer<T>::rw_vector *vec)
 		vec->len[1] = 0;
 	}
 }
-
 
 #endif /* __ringbuffer_h__ */
