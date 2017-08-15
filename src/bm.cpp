@@ -35,16 +35,33 @@ Bench::Bench(const char* uri, uint32_t sample_rate, uint32_t frame_size, uint32_
     this->sample_rate = sample_rate;
     this->frame_size = frame_size;
     this->n_frames = n_frames;
-    this->plugin = new Plugin(uri, sample_rate, frame_size);
+
+    // create plugin instance
+    plugin = new Plugin(uri, sample_rate, frame_size);
+
+    // set default vars values
     n_points_default = 4;
-    lower.jack_load = 100.0;
-    greater.jack_load = 0.0;
+    smaller.jack_load = 100.0;
+    bigger.jack_load = 0.0;
+
+    // create testing points for each parameter
     slicing_parameters();
+
+    // create input buffer
+    input_buffer = new float[frame_size];
+
+    // TODO: select input buffer
+    // random: 2 * ((float) rand() / (float) RAND_MAX) - 1.0;
+    for (uint32_t i = 0; i < frame_size; i++)
+    {
+        input_buffer[i] = 1.0;
+    }
 }
 
 Bench::~Bench()
 {
     delete plugin;
+    delete[] input_buffer;
 }
 
 void Bench::slicing_parameters(void)
@@ -121,8 +138,8 @@ void Bench::test_points(uint32_t depth, vector<uint32_t> & params, vector<uint32
             bench_info_t tmp;
             run_and_calc(&tmp);
 
-            if (tmp.jack_load < lower.jack_load) lower = tmp;
-            if (tmp.jack_load > greater.jack_load) greater = tmp;
+            if (tmp.jack_load < smaller.jack_load) smaller = tmp;
+            if (tmp.jack_load > bigger.jack_load) bigger = tmp;
         }
     }
 }
@@ -145,19 +162,10 @@ void Bench::run_and_calc(bench_info_t* var)
 
 void Bench::process(void)
 {
-    float *input = new float[frame_size];
-
-    // TODO: select input buffer
-    // random: 2 * ((float) rand() / (float) RAND_MAX) - 1.0;
-    for (uint32_t i = 0; i < frame_size; i++)
-    {
-        input[i] = 1.0;
-    }
-
     // copies the input buffer to plugin inputs
     for (uint32_t i = 0; i < plugin->audio->inputs_by_index.size(); i++)
     {
-        plugin->audio->inputs_by_index[i].write_buffer(input, frame_size);
+        plugin->audio->inputs_by_index[i].write_buffer(input_buffer, frame_size);
     }
 
     // process the benchmark using the minimum controls values
@@ -176,30 +184,28 @@ void Bench::process(void)
     {
         test_points(params.size(), params, n_points_to_test);
 
-        if (min.jack_load > greater.jack_load) greater = min;
-        if (max.jack_load > greater.jack_load) greater = max;
-        if (def.jack_load > greater.jack_load) greater = def;
+        if (min.jack_load > bigger.jack_load) bigger = min;
+        if (max.jack_load > bigger.jack_load) bigger = max;
+        if (def.jack_load > bigger.jack_load) bigger = def;
 
-        if (min.jack_load < lower.jack_load) lower = min;
-        if (max.jack_load < lower.jack_load) lower = max;
-        if (def.jack_load < lower.jack_load) lower = def;
+        if (min.jack_load < smaller.jack_load) smaller = min;
+        if (max.jack_load < smaller.jack_load) smaller = max;
+        if (def.jack_load < smaller.jack_load) smaller = def;
     }
-
-    delete[] input;
 }
 
 void Bench::print(void)
 {
     printf("Plugin: %s\n", plugin->uri.c_str());
-    printf("%12s%14s%13s%13s\n", "TestName", "TotalTime(s)", "AvrTime(s)", "JackLoad(%%)");
+    printf("%12s%14s%13s%13s\n", "TestName", "TotalTime(s)", "AvrTime(s)", "JackLoad(%)");
     printf("%12s%14.8f%13.8f%13f\n", "MinValues", min.total, min.average, min.jack_load);
     printf("%12s%14.8f%13.8f%13f\n", "DefValues", def.total, def.average, def.jack_load);
     printf("%12s%14.8f%13.8f%13f\n", "MaxValues", max.total, max.average, max.jack_load);
 
     if (full_test)
     {
-        printf("%12s%14.8f%13.8f%13f\n", "BestResult", lower.total, lower.average, lower.jack_load);
-        printf("%12s%14.8f%13.8f%13f\n", "WorstResult", greater.total, greater.average, greater.jack_load);
+        printf("%12s%14.8f%13.8f%13f\n", "BestResult", smaller.total, smaller.average, smaller.jack_load);
+        printf("%12s%14.8f%13.8f%13f\n", "WorstResult", bigger.total, bigger.average, bigger.jack_load);
     }
 
     printf("\n");

@@ -17,6 +17,7 @@ class Bench
 private:
     void slicing_parameters(void);
     std::vector<uint32_t> params;
+    float *input_buffer;
 
 public:
     Bench(const char* uri, uint32_t sample_rate, uint32_t frame_size, uint32_t n_frames);
@@ -30,7 +31,7 @@ public:
     uint32_t sample_rate, frame_size, n_frames;
     Plugin *plugin;
 
-    bench_info_t min, max, def, lower, greater;
+    bench_info_t min, max, def, smaller, bigger;
 
     bool full_test;
 
