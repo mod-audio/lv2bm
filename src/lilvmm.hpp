@@ -27,11 +27,6 @@
 
 namespace Lilv {
 
-static inline const char*
-uri_to_path(const char* uri) {
-	return lilv_uri_to_path(uri);
-}
-
 #define LILV_WRAP0(RT, prefix, name) \
 	inline RT name() { return lilv_ ## prefix ## _ ## name (me); }
 
