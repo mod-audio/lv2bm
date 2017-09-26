@@ -49,7 +49,8 @@ int main(int argc, char *argv[])
 
     // parse the command line options
     int opt, option_index;
-    while ((opt = getopt_long(argc, argv, "hr:f:n:tV", long_options, &option_index)) != -1 || no_arguments_passed) {
+    while ((opt = getopt_long(argc, argv, "hr:f:n:tV", long_options, &option_index)) != -1 ||
+           no_arguments_passed) {
         switch (opt) {
         case 'r':
             rate = atoi(optarg);
@@ -80,13 +81,13 @@ int main(int argc, char *argv[])
             cout << "  -r, --rate            Defines the sample rate. Default: " << rate << endl << endl;
             cout << "  -f, --frame-size      Defines the frame size. Equivalent to option -p of the JACK." << endl;
             cout << "                        Default: " << frame_size << endl << endl;
-            cout << "  -n, --n-frames        Defines the number of frames. How many times the run " << endl;
-            cout << "                        function of the plugin will execute. Default: " << n_frames << endl << endl;
-            cout << "  --full-test           The full test will run the plugins using differents" << endl;
-            cout << "                        controls values combinations. This test might take a long time" << endl;
-            cout << "  -V, --version         print program version and exit" << endl;
-            cout << "  -h, --help            print this help and exit" << endl;
-            cout << "                        time, depending on the amount of controls the plugin has." << endl << endl;
+            cout << "  -n, --n-frames        Defines the number of frames, i.e. how many times the 'run'" << endl;
+            cout << "                        function of the plugin executes. Default: " << n_frames << endl << endl;
+            cout << "  --full-test           Run the plugins using differents controls values combinations." << endl;
+            cout << "                        This test might take a long time depending on the amount of" << endl;
+            cout << "                        controls the plugin has." << endl << endl;
+            cout << "  -V, --version         Print program version and exit" << endl << endl;
+            cout << "  -h, --help            Print this help message and exit" << endl;
 
             if (opt != 'h') exit(EXIT_FAILURE);
             else exit(EXIT_SUCCESS);
@@ -112,3 +113,5 @@ int main(int argc, char *argv[])
 // TODO: choose differents audio inputs as in http://carlh.net/plugins/torture.php
 // TODO: allow to select the output unit
 // TODO(?): create option to print the controls values for max, min, def, best, worst
+// https://github.com/x42/testsignal.lv2
+// https://github.com/x42/midigen.lv2
