@@ -46,7 +46,8 @@ static inline double bench_end(const struct timespec* start_t)
     return bench_elapsed_s(start_t, &end_t);
 }
 
-Bench::Bench(const char* uri, uint32_t sample_rate, uint32_t frame_size, uint32_t n_frames)
+Bench::Bench(const char* uri, uint32_t sample_rate, uint32_t frame_size, uint32_t n_frames,
+             const char *signal)
 {
     this->sample_rate = sample_rate;
     this->frame_size = frame_size;
@@ -61,25 +62,20 @@ Bench::Bench(const char* uri, uint32_t sample_rate, uint32_t frame_size, uint32_
     bigger.jack_load = 0.0;
 
     // create testing points for each parameter
-    slicing_parameters();
+    slice_parameters();
 
-    // create input buffer
-    input_buffer = new float[frame_size];
-
-    // TODO: select input buffer
-    // random: 2 * ((float) rand() / (float) RAND_MAX) - 1.0;
-    for (uint32_t i = 0; i < frame_size; i++) {
-        input_buffer[i] = 1.0;
-    }
+    // signal generator
+    double duration = (double) (frame_size * n_frames) / (double) sample_rate;
+    generator = new Generator(sample_rate, signal, duration);
 }
 
 Bench::~Bench()
 {
     delete plugin;
-    delete[] input_buffer;
+    delete generator;
 }
 
-void Bench::slicing_parameters(void)
+void Bench::slice_parameters(void)
 {
     params.resize(plugin->control->inputs_by_index.size());
 
@@ -122,14 +118,14 @@ void Bench::test_points(uint32_t depth, vector<uint32_t> & params, vector<uint32
 
             // enumeration and scale point
             if (plugin->control->inputs_by_index[i].is_enumeration ||
-                    plugin->control->inputs_by_index[i].is_scale_point) {
+                plugin->control->inputs_by_index[i].is_scale_point) {
                 uint32_t index = params[i];
                 value = plugin->control->inputs_by_index[i].scale_points.values[index];
             }
 
             // TODO: toggle and trigger
             if (plugin->control->inputs_by_index[i].is_toggled ||
-                    plugin->control->inputs_by_index[i].is_trigger) {
+                plugin->control->inputs_by_index[i].is_trigger) {
             }
 
             // TODO: logarithmic
@@ -149,14 +145,21 @@ void Bench::test_points(uint32_t depth, vector<uint32_t> & params, vector<uint32
 
 void Bench::run_and_calc(bench_info_t* var)
 {
-    plugin->run(frame_size);
-
     struct timespec ts = bench_start();
+
     for (uint32_t i = 0; i < n_frames; ++i) {
+        // get input frame
+        float *input_buffer = generator->get_frame(frame_size);
+
+        // copies the input buffer to plugin inputs
+        for (uint32_t i = 0; i < plugin->audio->inputs_by_index.size(); i++) {
+            plugin->audio->inputs_by_index[i].write_buffer(input_buffer, frame_size);
+        }
+
         plugin->run(frame_size);
     }
-    var->total = bench_end(&ts);
 
+    var->total = bench_end(&ts);
     var->average = (var->total / (double)n_frames);
     double jack_latency = (double) frame_size / sample_rate;
     var->jack_load = 2.0 * (var->average * 100.0) / jack_latency;
@@ -164,11 +167,6 @@ void Bench::run_and_calc(bench_info_t* var)
 
 void Bench::process(void)
 {
-    // copies the input buffer to plugin inputs
-    for (uint32_t i = 0; i < plugin->audio->inputs_by_index.size(); i++) {
-        plugin->audio->inputs_by_index[i].write_buffer(input_buffer, frame_size);
-    }
-
     // process the benchmark using the minimum controls values
     plugin->control->set_value(MINIMUM_PRESET_LABEL);
     run_and_calc(&min);
@@ -196,7 +194,7 @@ void Bench::process(void)
 
 void Bench::print(void)
 {
-    printf("Plugin: %s\n", plugin->uri.c_str());
+    printf("Plugin: %s, Input signal: %s\n", plugin->uri.c_str(), generator->signal_name);
     printf("%12s%14s%13s%13s\n", "TestName", "TotalTime(s)", "AvrTime(s)", "JackLoad(%)");
     printf("%12s%14.8f%13.8f%13f\n", "MinValues", min.total, min.average, min.jack_load);
     printf("%12s%14.8f%13.8f%13f\n", "DefValues", def.total, def.average, def.jack_load);

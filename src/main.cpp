@@ -35,13 +35,17 @@ int main(int argc, char *argv[])
         {"frame-size", required_argument, 0, 'f'},
         {"n-frames", required_argument, 0, 'n'},
         {"full-test", no_argument, 0, 't'},
+        {"input", required_argument, 0, 'i'},
         {"version", no_argument, 0, 'V'},
         {0, 0, 0, 0}
     };
 
     // default options values
-    unsigned int rate = 44100, frame_size = 256, n_frames = 64;
+    unsigned int rate = 48000, frame_size = 128, n_frames = rate / frame_size;
     bool full_test = false;
+
+    const char *default_input_signal = "sine";
+    const char *input_signal = default_input_signal;
 
     bool no_arguments_passed = false;
     if (argc < 2)
@@ -49,7 +53,7 @@ int main(int argc, char *argv[])
 
     // parse the command line options
     int opt, option_index;
-    while ((opt = getopt_long(argc, argv, "hr:f:n:tV", long_options, &option_index)) != -1 ||
+    while ((opt = getopt_long(argc, argv, "hr:f:n:ti:V", long_options, &option_index)) != -1 ||
            no_arguments_passed) {
         switch (opt) {
         case 'r':
@@ -66,6 +70,10 @@ int main(int argc, char *argv[])
 
         case 't':
             full_test = true;
+            break;
+
+        case 'i':
+            input_signal = optarg;
             break;
 
         case 'V':
@@ -86,8 +94,19 @@ int main(int argc, char *argv[])
             cout << "  --full-test           Run the plugins using differents controls values combinations." << endl;
             cout << "                        This test might take a long time depending on the amount of" << endl;
             cout << "                        controls the plugin has." << endl << endl;
-            cout << "  -V, --version         Print program version and exit" << endl << endl;
-            cout << "  -h, --help            Print this help message and exit" << endl;
+            cout << "  -i, --input           Select the signal to apply to the audio inputs of the plugin." << endl;
+            cout << "                        Valid inputs:" << endl;
+            cout << "                          sine:       Sine wave 1kHz" << endl;
+            cout << "                          square:     Square wave 1kHz" << endl;
+            cout << "                          sweep:      Sine sweep 20Hz to 20KHz in n-frames" << endl;
+            cout << "                          white:      Uniform white noise" << endl;
+            cout << "                          gwhite:     Gaussian shaped white noise" << endl;
+            cout << "                          pink:       Pink noise" << endl;
+            cout << "                          impulse:    1 sample spike 100Hz, 0dBFS" << endl;
+            cout << "                          sawtooth:   Sawtooth wave 100Hz" << endl;
+            cout << "                          triangle:   Triangle wave 100Hz" << endl << endl;
+            cout << "  -V, --version         Print program version and exit." << endl << endl;
+            cout << "  -h, --help            Print this help message and exit." << endl;
 
             if (opt != 'h') exit(EXIT_FAILURE);
             else exit(EXIT_SUCCESS);
@@ -97,7 +116,7 @@ int main(int argc, char *argv[])
     // run the benchmark
     for (int i = 0; i < (argc - optind); i++) {
         try {
-            Bench bench = Bench(argv[optind+i], rate, frame_size, n_frames);
+            Bench bench = Bench(argv[optind+i], rate, frame_size, n_frames, input_signal);
             bench.full_test = full_test;
             bench.process();
             bench.print();
@@ -110,8 +129,6 @@ int main(int argc, char *argv[])
 
 // TODO: dump plugin test information when receive segfault
 // TODO: generate MIDI input for plugins that need it
-// TODO: choose differents audio inputs as in http://carlh.net/plugins/torture.php
 // TODO: allow to select the output unit
 // TODO(?): create option to print the controls values for max, min, def, best, worst
-// https://github.com/x42/testsignal.lv2
 // https://github.com/x42/midigen.lv2

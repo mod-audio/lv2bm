@@ -19,6 +19,7 @@
 #define BENCH_H
 
 #include "plugin.h"
+#include "input_gen.h"
 
 using namespace std;
 
@@ -29,12 +30,13 @@ struct bench_info_t {
 
 class Bench {
 private:
-    void slicing_parameters(void);
+    void slice_parameters(void);
     std::vector<uint32_t> params;
-    float *input_buffer;
+    Generator *generator;
 
 public:
-    Bench(const char* uri, uint32_t sample_rate, uint32_t frame_size, uint32_t n_frames);
+    Bench(const char* uri, uint32_t sample_rate, uint32_t frame_size, uint32_t n_frames,
+          const char *signal);
     ~Bench();
 
     void run_and_calc(bench_info_t* var);
