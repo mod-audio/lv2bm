@@ -24,12 +24,13 @@ The steps to build and install are:
     make
     make install
 
-The default instalation path is /usr/local/bin, this can be modified passing
+The default instalation path is `/usr/local/bin`, this can be modified passing
 the variable PREFIX to make install:
 
     make install PREFIX=/usr
 
-Or you can use the INSTALL_PATH if don't want the bin subdirectory.
+The previous command installs the files in `/usr/bin`. Alternatively INSTALL_PATH
+variable might be used to define the absolute installation path.
 
 Dependencies:
 
@@ -44,17 +45,31 @@ Usage
 
 Valid options:
 
-    -r, --rate            Defines the sample rate. Default: 44100
+    -r, --rate            Defines the sample rate. Default: 48000
 
-    -f, --frame-size      Defines the frame size. Equivalent to option -p on JACK.
-                          Default: 256
+    -f, --frame-size      Defines the frame size. Equivalent to option -p of the JACK.
+                          Default: 128
 
-    -n, --n-frames        Defines the number of frames. How many times the run
-                          function of the plugin will execute. Default: 64
+    -n, --n-frames        Defines the number of frames, i.e. how many times the 'run'
+                          function of the plugin executes. Default: 375
 
-    --full-test           The full test will run the plugins using differents
-                          controls values combinations. This test can take a long
-                          time, depending on the amount of controls the plugin has.
+    --full-test           Run the plugins using differents controls values combinations.
+                          This test might take a long time depending on the amount of
+                          controls the plugin has.
+
+    -i, --input           Select the signal to apply to the audio inputs of the plugin.
+                          Valid inputs:
+                            sine:       Sine wave 1kHz
+                            square:     Square wave 1kHz
+                            sweep:      Sine sweep 20Hz to 20KHz in n-frames
+                            white:      Uniform white noise
+                            gwhite:     Gaussian shaped white noise
+                            pink:       Pink noise
+                            impulse:    1 sample spike 100Hz, 0dBFS
+                            sawtooth:   Sawtooth wave 100Hz
+                            triangle:   Triangle wave 100Hz
+
+    -V, --version         Print program version and exit.
 
 
 Full test
