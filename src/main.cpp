@@ -121,7 +121,9 @@ int main(int argc, char *argv[])
             bench.process();
             bench.print();
         }
-        catch(...) {}
+        catch(exception& e) {
+            cout << e.what() << endl;
+        }
     }
 
     return 0;
