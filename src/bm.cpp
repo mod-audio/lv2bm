@@ -47,7 +47,7 @@ static inline double bench_end(const struct timespec* start_t)
 }
 
 Bench::Bench(const char* uri, uint32_t sample_rate, uint32_t frame_size, uint32_t n_frames,
-             const char *signal)
+             const char *signal, const char *output)
 {
     this->sample_rate = sample_rate;
     this->frame_size = frame_size;
@@ -67,6 +67,11 @@ Bench::Bench(const char* uri, uint32_t sample_rate, uint32_t frame_size, uint32_
     // signal generator
     double duration = (double) (frame_size * n_frames) / (double) sample_rate;
     generator = new Generator(sample_rate, signal, duration);
+
+    // create sound file
+    int n_channels = plugin->audio->outputs_by_index.size();
+    if (output)
+        sndfile = SndfileHandle(output, SFM_WRITE, SF_FORMAT_FLAC | SF_FORMAT_PCM_24, n_channels, sample_rate);
 }
 
 Bench::~Bench()
@@ -143,7 +148,7 @@ void Bench::test_points(uint32_t depth, vector<uint32_t> & params, vector<uint32
     }
 }
 
-void Bench::run_and_calc(bench_info_t* var)
+void Bench::run_and_calc(bench_info_t* var, bool save_output)
 {
     struct timespec ts = bench_start();
 
@@ -157,12 +162,29 @@ void Bench::run_and_calc(bench_info_t* var)
         }
 
         plugin->run(frame_size);
+
+        // copies the outputs buffer to output file
+        if (save_output && sndfile) {
+            int n_ouputs = plugin->audio->outputs_by_index.size();
+            float interleaved[frame_size * n_ouputs];
+
+            for (uint32_t i = 0; i < frame_size; i++) {
+                for (int j = 0; j < n_ouputs; j++) {
+                    interleaved[i * n_ouputs + j] = plugin->audio->outputs_by_index[j].buffer[i];
+                }
+            }
+            sndfile.write(interleaved, frame_size * n_ouputs);
+        }
     }
 
-    var->total = bench_end(&ts);
-    var->average = (var->total / (double)n_frames);
-    double jack_latency = (double) frame_size / sample_rate;
-    var->jack_load = 2.0 * (var->average * 100.0) / jack_latency;
+    double total = bench_end(&ts);
+
+    if (var) {
+        var->total = total;
+        var->average = (var->total / (double)n_frames);
+        double jack_latency = (double) frame_size / sample_rate;
+        var->jack_load = 2.0 * (var->average * 100.0) / jack_latency;
+    }
 }
 
 void Bench::process(void)
@@ -178,6 +200,11 @@ void Bench::process(void)
     // process the benchmark using the default controls values
     plugin->control->set_value(DEFAULT_PRESET_LABEL);
     run_and_calc(&def);
+
+    // generate the output audio file using the default control values
+    if (sndfile) {
+        run_and_calc(0, true);
+    }
 
     if (full_test) {
         test_points(params.size(), params, n_points_to_test);
@@ -204,6 +231,4 @@ void Bench::print(void)
         printf("%12s%14.8f%13.8f%13f\n", "BestResult", smaller.total, smaller.average, smaller.jack_load);
         printf("%12s%14.8f%13.8f%13f\n", "WorstResult", bigger.total, bigger.average, bigger.jack_load);
     }
-
-    printf("\n");
 }

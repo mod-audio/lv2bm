@@ -36,6 +36,7 @@ int main(int argc, char *argv[])
         {"n-frames", required_argument, 0, 'n'},
         {"full-test", no_argument, 0, 't'},
         {"input", required_argument, 0, 'i'},
+        {"output", required_argument, 0, 'o'},
         {"version", no_argument, 0, 'V'},
         {0, 0, 0, 0}
     };
@@ -46,6 +47,7 @@ int main(int argc, char *argv[])
 
     const char *default_input_signal = "sine";
     const char *input_signal = default_input_signal;
+    const char *output = 0;
 
     bool no_arguments_passed = false;
     if (argc < 2)
@@ -53,7 +55,7 @@ int main(int argc, char *argv[])
 
     // parse the command line options
     int opt, option_index;
-    while ((opt = getopt_long(argc, argv, "hr:f:n:ti:V", long_options, &option_index)) != -1 ||
+    while ((opt = getopt_long(argc, argv, "hr:f:n:ti:o:V", long_options, &option_index)) != -1 ||
            no_arguments_passed) {
         switch (opt) {
         case 'r':
@@ -74,6 +76,10 @@ int main(int argc, char *argv[])
 
         case 'i':
             input_signal = optarg;
+            break;
+
+        case 'o':
+            output = optarg;
             break;
 
         case 'V':
@@ -105,6 +111,8 @@ int main(int argc, char *argv[])
             cout << "                          impulse:    1 sample spike 100Hz, 0dBFS" << endl;
             cout << "                          sawtooth:   Sawtooth wave 100Hz" << endl;
             cout << "                          triangle:   Triangle wave 100Hz" << endl << endl;
+            cout << "  -o, --output FILE     Write the plugin outputs to a FLAC file. The generated file" << endl;
+            cout << "                        contains the audio using the default values of controls." << endl << endl;
             cout << "  -V, --version         Print program version and exit." << endl << endl;
             cout << "  -h, --help            Print this help message and exit." << endl;
 
@@ -116,7 +124,7 @@ int main(int argc, char *argv[])
     // run the benchmark
     for (int i = 0; i < (argc - optind); i++) {
         try {
-            Bench bench = Bench(argv[optind+i], rate, frame_size, n_frames, input_signal);
+            Bench bench = Bench(argv[optind+i], rate, frame_size, n_frames, input_signal, output);
             bench.full_test = full_test;
             bench.process();
             bench.print();

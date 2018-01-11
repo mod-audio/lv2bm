@@ -36,6 +36,7 @@ Dependencies:
 
     glib            >= 2.0
     liblilv         >= 0.14.2
+    libsndfile      >= 1.0
 
 
 Usage
@@ -68,6 +69,9 @@ Valid options:
                             impulse:    1 sample spike 100Hz, 0dBFS
                             sawtooth:   Sawtooth wave 100Hz
                             triangle:   Triangle wave 100Hz
+
+    -o, --output FILE     Write the plugin outputs to a FLAC file. The generated file
+                          contains the audio using the default values of controls.
 
     -V, --version         Print program version and exit.
 

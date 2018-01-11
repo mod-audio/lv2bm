@@ -18,6 +18,8 @@
 #ifndef BENCH_H
 #define BENCH_H
 
+#include <sndfile.hh>
+
 #include "plugin.h"
 #include "input_gen.h"
 
@@ -33,13 +35,14 @@ private:
     void slice_parameters(void);
     std::vector<uint32_t> params;
     Generator *generator;
+    SndfileHandle sndfile;
 
 public:
     Bench(const char* uri, uint32_t sample_rate, uint32_t frame_size, uint32_t n_frames,
-          const char *signal);
+          const char *signal, const char *output);
     ~Bench();
 
-    void run_and_calc(bench_info_t* var);
+    void run_and_calc(bench_info_t* var, bool save_output=false);
     void process(void);
     void print(void);
     void test_points(uint32_t depth, vector<uint32_t> & params, vector<uint32_t> & n_points);
