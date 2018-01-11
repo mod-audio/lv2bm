@@ -12,6 +12,8 @@ Its features are:
 - uses minimum, maximum and default control values to run the plugins
 - has a full test mode which check all combinations for discrete controls
 - the output shows the JACK load percent
+- allows to select the input signal to use on the plugins test
+- allows to save the output of the plugins to a FLAC file
 - can be used along with valgrind to detect plugin memory issues
 
 
