@@ -5,8 +5,8 @@ lv2bm
 About
 -----
 
-lv2bm is a benchmark tool for LV2 plugins, it was inspired in the lv2bench of lilv utils.
-Its features are:
+lv2bm is a benchmark tool for LV2 plugins, it was inspired in the lv2bench of lilv utils and
+the [Torture tester](http://carlh.net/plugins/torture.php). The current features of lv2bm are:
 
 - allows to select which URIs to test
 - uses minimum, maximum and default control values to run the plugins
