@@ -18,7 +18,6 @@
 #ifndef PLUGIN_H
 #define PLUGIN_H
 
-#include <cstdint>
 #include <iostream>
 #include <cstring>
 #include <vector>
