@@ -1,11 +1,5 @@
 # compiler
-CC = g++
-
-# linker
-LD = g++
-
-# language file extension
-EXT = cpp
+CXX ?= g++
 
 # source files directory
 SRC_DIR = ./src
@@ -14,9 +8,8 @@ SRC_DIR = ./src
 PROG = lv2bm
 
 # default install paths
-PREFIX = /usr/local
-INSTALL_PATH = $(PREFIX)/bin
-MANDIR = $(PREFIX)/share/man/man1/
+PREFIX ?= /usr/local
+BINDIR = $(PREFIX)/bin
 
 # default compiler and linker flags
 CFLAGS = -O3 -Wall -Wextra -c
@@ -38,22 +31,22 @@ INCS = `pkg-config --cflags lilv-0` `pkg-config --cflags glib-2.0`
 RM = rm -f
 
 # source and object files
-SRC = $(wildcard $(SRC_DIR)/*.$(EXT))
-OBJ = $(SRC:.$(EXT)=.o)
+SRC = $(wildcard $(SRC_DIR)/*.cpp)
+OBJ = $(SRC:.cpp=.o)
 
 # linking rule
 $(PROG): get_info $(OBJ)
-	$(LD) $(LDFLAGS) $(OBJ) -o $(PROG) $(LIBS)
+	$(CXX) $(LDFLAGS) $(OBJ) -o $(PROG) $(LIBS)
 	@rm src/info.h
 
 # meta-rule to generate the object files
-%.o: %.$(EXT)
-	$(CC) $(CFLAGS) $(INCS) -o $@ $<
+%.o: %.cpp
+	$(CXX) $(CFLAGS) $(INCS) -o $@ $<
 
 # install rule
 install:
-	install -d $(INSTALL_PATH)
-	install $(PROG) $(INSTALL_PATH)
+	install -d $(DESTDIR)$(BINDIR)
+	install 755 $(PROG) $(DESTDIR)$(BINDIR)
 
 # clean rule
 clean:
