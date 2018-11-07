@@ -45,7 +45,7 @@ $(PROG): $(OBJ)
 # install rule
 install:
 	install -d $(DESTDIR)$(BINDIR)
-	install 755 $(PROG) $(DESTDIR)$(BINDIR)
+	install -m 755 $(PROG) $(DESTDIR)$(BINDIR)
 
 # clean rule
 clean:
