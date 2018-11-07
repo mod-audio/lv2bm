@@ -18,7 +18,7 @@
 #ifndef PLUGIN_H
 #define PLUGIN_H
 
-#include <stdint.h>
+#include <cstdint>
 #include <iostream>
 #include <cstring>
 #include <vector>
