@@ -35,9 +35,8 @@ SRC = $(wildcard $(SRC_DIR)/*.cpp)
 OBJ = $(SRC:.cpp=.o)
 
 # linking rule
-$(PROG): get_info $(OBJ)
+$(PROG): $(OBJ)
 	$(CXX) $(LDFLAGS) $(OBJ) -o $(PROG) $(LIBS)
-	@rm src/info.h
 
 # meta-rule to generate the object files
 %.o: %.cpp
@@ -50,8 +49,4 @@ install:
 
 # clean rule
 clean:
-	$(RM) $(SRC_DIR)/*.o $(PROG) src/info.h
-
-# get info rule
-get_info:
-	@echo "const char version[] = {\""`git describe --tags`\""};" > src/info.h
+	$(RM) $(SRC_DIR)/*.o $(PROG)

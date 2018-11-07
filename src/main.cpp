@@ -17,15 +17,14 @@
 
 #include <iostream>
 #include "bm.h"
-#include "info.h"
 
 #include <stdlib.h>
 #include <getopt.h>
 
 using namespace std;
 
-// The version is extracted from git history
-extern const char version[];
+// software version
+const char version[] = "v1.1";
 
 int main(int argc, char *argv[])
 {
