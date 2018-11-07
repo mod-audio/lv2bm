@@ -86,7 +86,7 @@ scale points and toggle will have all points tested. The other type of controls 
 sliced resulting in 4 points to be tested. Along with valgrind this evaluation is useful to
 stress the plugin trying find out segfaults or memory issues (leak, invalid read/write, ...).
 
-Following is a real case of use. Sometime the CabinetIV plugin, of the CAPS collection, owned
+Following is a real case of use. Sometime ago the CabinetIV plugin, of the CAPS collection, had
 a bug that was causing a segfault just when the model parameter was configured to value "Sixty-two".
 Moreover, the segfault just happened in a specific machine (little RAM memory). Although the symptoms,
 the bug wasn't related to the "Sixty-two" option. Probably several hours would be saved using this tools.
@@ -95,14 +95,14 @@ If you interested in reproduce this situation to familiarize yourself with the p
 our caps-lv2 repository and checkout to the commit just before the bug resolution (383a16c2), build it,
 install to your LV2 path and run it using the following command:
 
-    valgrind --leak-check=full --show-reachable=no lv2bm http://portalmod.com/plugins/caps/CabinetIV
+    valgrind --leak-check=full --show-reachable=no lv2bm http://moddevices.com/plugins/caps/CabinetIV
 
 The valgrind output should be something like that:
 
     ==13521== Memcheck, a memory error detector
     ==13521== Copyright (C) 2002-2013, and GNU GPL'd, by Julian Seward et al.
     ==13521== Using Valgrind-3.10.0 and LibVEX; rerun with -h for copyright info
-    ==13521== Command: lv2bm --full-test http://portalmod.com/plugins/caps/CabinetIV
+    ==13521== Command: lv2bm --full-test http://moddevices.com/plugins/caps/CabinetIV
     ==13521== Parent PID: 2668
     ==13521==
     ==13521== Invalid read of size 16
@@ -139,7 +139,7 @@ note that the output shows 0 errors.
     ==13763== Memcheck, a memory error detector
     ==13763== Copyright (C) 2002-2013, and GNU GPL'd, by Julian Seward et al.
     ==13763== Using Valgrind-3.10.0 and LibVEX; rerun with -h for copyright info
-    ==13763== Command: lv2bm --full-test http://portalmod.com/plugins/caps/CabinetIV
+    ==13763== Command: lv2bm --full-test http://moddevices.com/plugins/caps/CabinetIV
     ==13763== Parent PID: 2668
     ==13763==
     ==13763==
