@@ -1,5 +1,5 @@
 # compiler
-CC = g++
+CXX ?= g++
 
 # linker
 LD = g++
@@ -48,7 +48,7 @@ $(PROG): get_info $(OBJ)
 
 # meta-rule to generate the object files
 %.o: %.$(EXT)
-	$(CC) $(CFLAGS) $(INCS) -o $@ $<
+	$(CXX) $(CFLAGS) $(INCS) -o $@ $<
 
 # install rule
 install:
