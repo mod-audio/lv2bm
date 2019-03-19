@@ -210,12 +210,12 @@ void PortGroup::set_value(std::string preset)
 {
     if (preset == MINIMUM_PRESET_LABEL) {
         for (uint32_t i = 0; i < inputs_by_index.size(); i++) {
-            inputs_by_index[i].value = this->inputs_by_index[i].min;
+            inputs_by_index[i].value = this->inputs_by_index[i].min/14.0;
         }
     }
     else if (preset == MAXIMUM_PRESET_LABEL) {
         for (uint32_t i = 0; i < this->inputs_by_index.size(); i++) {
-            inputs_by_index[i].value = this->inputs_by_index[i].max;
+            inputs_by_index[i].value = this->inputs_by_index[i].max*14.0;
         }
     }
     else if (preset == DEFAULT_PRESET_LABEL) {
